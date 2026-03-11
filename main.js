@@ -169,8 +169,80 @@ function metQuota(date, activeTime) {
 // ============================================================
 function addShiftRecord(textFile, shiftObj) {
     // TODO: Implement this function
-}
+    const fs = require("fs");
 
+    let data = fs.readFileSync(textFile, "utf8");
+
+    let lines = [];
+    if (data.trim() !== "") {
+        lines = data.trim().split("\n");
+    }
+
+    
+    for (let line of lines) {
+        let parts = line.split(",");
+        if (parts[0] === shiftObj.driverID && parts[2] === shiftObj.date) {
+            return {};
+        }
+    }
+
+    
+    let shiftDuration = getShiftDuration(shiftObj.startTime, shiftObj.endTime);
+    let idleTime = getIdleTime(shiftObj.startTime, shiftObj.endTime);
+    let activeTime = getActiveTime(shiftDuration, idleTime);
+    let metQuotaValue = metQuota(shiftObj.date, activeTime);
+
+    let hasBonus = false;
+
+   
+    let newRecord = {
+        driverID: shiftObj.driverID,
+        driverName: shiftObj.driverName,
+        date: shiftObj.date,
+        startTime: shiftObj.startTime,
+        endTime: shiftObj.endTime,
+        shiftDuration: shiftDuration,
+        idleTime: idleTime,
+        activeTime: activeTime,
+        metQuota: metQuotaValue,
+        hasBonus: hasBonus
+    };
+
+   
+    let newLine =
+        newRecord.driverID + "," +
+        newRecord.driverName + "," +
+        newRecord.date + "," +
+        newRecord.startTime + "," +
+        newRecord.endTime + "," +
+        newRecord.shiftDuration + "," +
+        newRecord.idleTime + "," +
+        newRecord.activeTime + "," +
+        newRecord.metQuota + "," +
+        newRecord.hasBonus;
+
+    
+    let index = -1;
+    for (let i = 0; i < lines.length; i++) {
+        let parts = lines[i].split(",");
+        if (parts[0] === shiftObj.driverID) {
+            index = i;
+        }
+    }
+
+    
+    if (index === -1) {
+        lines.push(newLine);
+    } else {
+        lines.splice(index + 1, 0, newLine);
+    }
+
+    
+    fs.writeFileSync(textFile, lines.join("\n"));
+
+    return newRecord;
+
+    }
 // ============================================================
 // Function 6: setBonus(textFile, driverID, date, newValue)
 // textFile: (typeof string) path to shifts text file
@@ -181,6 +253,26 @@ function addShiftRecord(textFile, shiftObj) {
 // ============================================================
 function setBonus(textFile, driverID, date, newValue) {
     // TODO: Implement this function
+    const fs = require("fs");
+    let data = fs.readFileSync(textFile, "utf8").trim().split("\n");
+    let header = data[0];
+    let rows = data.slice(1);
+
+    for (let i = 0; i < rows.length; i++) {
+
+        let cols = rows[i].split(",");
+
+        if (cols[0] === driverID && cols[2] === date) {
+            cols[9] = String(newValue); 
+            rows[i] = cols.join(",");
+        }
+
+    }
+
+    let newFile = [header, ...rows].join("\n");
+
+    fs.writeFileSync(textFile, newFile);
+
 }
 
 // ============================================================
@@ -192,7 +284,42 @@ function setBonus(textFile, driverID, date, newValue) {
 // ============================================================
 function countBonusPerMonth(textFile, driverID, month) {
     // TODO: Implement this function
+    const fs = require("fs");
+
+    let data = fs.readFileSync(textFile, "utf8").trim().split("\n");
+
+    let rows = data.slice(1); 
+
+    let count = 0;
+    let driverFound = false;
+
+    for (let i = 0; i < rows.length; i++) {
+
+        let cols = rows[i].split(",");
+
+        let id = cols[0];
+        let date = cols[2];
+        let hasBonus = cols[9];
+
+        if (id === driverID) {
+
+            driverFound = true;
+
+            let monthFromDate = date.split("-")[1]; 
+
+            if (parseInt(monthFromDate) === parseInt(month) && hasBonus === "true") {
+                count++;
+            }
+        }
+    }
+
+    if (!driverFound) {
+        return -1;
+    }
+
+    return count;
 }
+
 
 // ============================================================
 // Function 8: getTotalActiveHoursPerMonth(textFile, driverID, month)
