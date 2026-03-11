@@ -8,7 +8,45 @@ const fs = require("fs");
 // ============================================================
 function getShiftDuration(startTime, endTime) {
     // TODO: Implement this function
+    function toSeconds(timeStr){
+        let parts = timeStr.split(" ");
+        let time = parts[0];
+        let period = parts[1];
+
+        let t = time.split(":");
+        let h = parseInt(t[0]);
+        let m = parseInt(t[1]);
+        let s = parseInt(t[2]);
+
+        if(period === "pm" && h !== 12){
+            h += 12;
+        }
+
+        if(period === "am" && h === 12){
+            h = 0;
+        }
+
+        return h*3600 + m*60 + s;
+    }
+
+    let startSeconds = toSeconds(startTime);
+    let endSeconds = toSeconds(endTime);
+
+    let duration;
+
+    if(endSeconds >= startSeconds){
+        duration = endSeconds - startSeconds;
+    }else{
+        duration = (24*3600 - startSeconds) + endSeconds;
+    }
+
+    let h = Math.floor(duration/3600);
+    let m = Math.floor((duration%3600)/60);
+    let s = duration%60;
+
+    return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
+
 
 // ============================================================
 // Function 2: getIdleTime(startTime, endTime)
@@ -17,7 +55,49 @@ function getShiftDuration(startTime, endTime) {
 // Returns: string formatted as h:mm:ss
 // ============================================================
 function getIdleTime(startTime, endTime) {
-    // TODO: Implement this function
+        function toSeconds(timeStr){
+            let parts = timeStr.split(" ");
+            let time = parts[0];
+            let period = parts[1];
+    
+            let t = time.split(":");
+            let h = parseInt(t[0]);
+            let m = parseInt(t[1]);
+            let s = parseInt(t[2]);
+    
+            if(period === "pm" && h !== 12){
+                h += 12;
+            }
+    
+            if(period === "am" && h === 12){
+                h = 0;
+            }
+    
+            return h*3600 + m*60 + s;
+        }
+    
+        let start = toSeconds(startTime);
+        let end = toSeconds(endTime);
+    
+        let startDelivery = 8*3600;
+        let endDelivery = 22*3600;
+    
+        let idle = 0;
+    
+        if(start < startDelivery){
+            idle += startDelivery - start;
+        }
+    
+        if(end > endDelivery){
+            idle += end - endDelivery;
+        }
+    
+        let h = Math.floor(idle/3600);
+        let m = Math.floor((idle%3600)/60);
+        let s = idle%60;
+    
+        return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    
 }
 
 // ============================================================
@@ -28,6 +108,25 @@ function getIdleTime(startTime, endTime) {
 // ============================================================
 function getActiveTime(shiftDuration, idleTime) {
     // TODO: Implement this function
+    function toSeconds(time){
+        let t = time.split(":");
+        let h = parseInt(t[0]);
+        let m = parseInt(t[1]);
+        let s = parseInt(t[2]);
+        
+        return h*3600 + m*60 + s;
+        }
+        
+        let shiftSec = toSeconds(shiftDuration);
+        let idleSec = toSeconds(idleTime);
+        
+        let activeSec = shiftSec - idleSec;
+        
+        let h = Math.floor(activeSec/3600);
+        let m = Math.floor((activeSec%3600)/60);
+        let s = activeSec%60;
+        
+        return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
 
 // ============================================================
@@ -38,6 +137,28 @@ function getActiveTime(shiftDuration, idleTime) {
 // ============================================================
 function metQuota(date, activeTime) {
     // TODO: Implement this function
+    function toSeconds(time){
+        let parts = time.split(":");
+        let h = parseInt(parts[0]);
+        let m = parseInt(parts[1]);
+        let s = parseInt(parts[2]);
+        
+        return h*3600 + m*60 + s;
+        }
+        
+        let activeSeconds = toSeconds(activeTime);
+        
+        let quotaSeconds;
+        
+      
+        if(date >= "2025-04-10" && date <= "2025-04-30"){
+        quotaSeconds = 6 * 3600;
+        }
+        else{
+        quotaSeconds = (8 * 3600) + (24 * 60);
+        }
+        
+        return activeSeconds >= quotaSeconds;
 }
 
 // ============================================================
