@@ -297,9 +297,9 @@ function countBonusPerMonth(textFile, driverID, month) {
 
         let cols = rows[i].split(",");
 
-        let id = cols[0];
-        let date = cols[2];
-        let hasBonus = cols[9];
+        let id = cols[0].trim();
+        let date = cols[2].trim();
+        let hasBonus = cols[9].trim();
 
         if (id === driverID) {
 
